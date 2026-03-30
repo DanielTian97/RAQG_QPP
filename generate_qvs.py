@@ -126,13 +126,13 @@ if __name__=="__main__":
     parser.add_argument("--dataset_name", type=str, default='dl_19', choices=['dl_19', 'dl_20', 'dl_21', 'dl_22', 'webis-touche2020', 'trec_covid'])
     parser.add_argument("--q_retriever", type=str, default='bm25', choices=['bm25', 'sbert', 'dragon', 'tct', 'dragon_qasd', 'tct_qasd'])
     parser.add_argument("--hop_num", type=int, default=1, choices=[1, 2])
-    parser.add_argument("--k", type=int, default=0)
+    parser.add_argument("--p", type=int, default=0)
     args = parser.parse_args()
     
     dataset_name = args.dataset_name
     q_retriever = args.q_retriever
     hop_num = args.hop_num
-    k = args.k
+    p = args.p # number of retrieved examples
 
     info_dict = {'dl_19': {'path': 'irds:msmarco-passage/trec-dl-2019/judged'}, 'dl_20': {'path': 'irds:msmarco-passage/trec-dl-2020/judged'}, 
                  'dl_21': {'path': 'irds:msmarco-passage-v2/trec-dl-2021/judged', 'meta': {'docno': 64, 'title': 100, 'text': 4096}}, 'dl_22': {'path': 'irds:msmarco-passage-v2/trec-dl-2022/judged', 'meta': {'docno': 64, 'title': 100, 'text': 4096}},
@@ -145,15 +145,15 @@ if __name__=="__main__":
     print('loading queries')
     queries = prepare_data(dataset_name)
 
-    if(k == 0):
+    if(p == 0):
         qv_df = 0
     else:
         qv_df = pd.read_csv(f'./qv_res/reranked_{dataset_name}_{q_retriever}_{hop_num}hop.csv')
         qv_df.qid = qv_df.qid.astype('str')
 
-    print(f'[now at] {dataset_name} {q_retriever} {hop_num}hop {k}')
+    print(f'[now at] {dataset_name} {q_retriever} {hop_num}hop {p}')
     
-    if(k == 0):
+    if(p == 0):
         output_dir = f'./gen_qv_res/{dataset_name}_0shot_qvs'
         path = Path(f'{output_dir}.json')
         if path.exists():
@@ -175,7 +175,7 @@ if __name__=="__main__":
             json.dump(qv_total_dict, f)
             
     else:
-        output_dir = f'./gen_qv_res/{dataset_name}_{k}shot_{hop_num}hop_{q_retriever}_qvs'
+        output_dir = f'./gen_qv_res/{dataset_name}_{p}shot_{hop_num}hop_{q_retriever}_qvs'
         path = Path(f'{output_dir}.json')
         if path.exists():
             print("File exists")
@@ -183,7 +183,7 @@ if __name__=="__main__":
         else:
             pass
         
-        queries[['gen_qvs', 'success_generated']] = queries.apply(lambda x: pd.Series(gen_kshot_qv(x['qid'], x['query'], qv_df, k)), axis=1)
+        queries[['gen_qvs', 'success_generated']] = queries.apply(lambda x: pd.Series(gen_kshot_qv(x['qid'], x['query'], qv_df, p)), axis=1)
         queries.to_csv(f'{output_dir}.csv', index=False)
             
         qv_total_dict = {}

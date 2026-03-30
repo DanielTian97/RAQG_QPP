@@ -39,12 +39,12 @@ def transform_qv_df(_res):
 #########
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--exp_name", type=str, default='dl_19', choices=list(path_dict.keys()))
+parser.add_argument("--dataset_name", type=str, default='dl_19', choices=list(path_dict.keys()))
 parser.add_argument("--q_retriever", type=str, default='bm25', choices=['bm25', 'sbert', 'dragon', 'tct', 'dragon_qasd', 'tct_qasd'])
 parser.add_argument("--hop_num", type=int, default=1, choices=[1, 2])
 args = parser.parse_args()
 
-exp_name = args.exp_name
+exp_name = args.dataset_name
 q_retriever = args.q_retriever
 hop_num = args.hop_num
 

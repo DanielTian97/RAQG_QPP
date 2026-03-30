@@ -24,15 +24,15 @@ if __name__=="__main__":
     parser.add_argument("--dataset_name", type=str, default='dl_19', choices=['dl_19', 'dl_20', 'dl_21', 'dl_22', 'webis-touche2020', 'trec_covid'])
     parser.add_argument("--q_retriever", type=str, default='bm25', choices=['bm25', 'sbert', 'dragon', 'tct', 'dragon_qasd', 'tct_qasd'])
     parser.add_argument("--hop_num", type=int, default=1, choices=[1, 2])
-    parser.add_argument("--k", type=int, default=1)
+    parser.add_argument("--p", type=int, default=1)
     args = parser.parse_args()
     
     dataset = args.dataset_name
     q_rtr = args.q_retriever
     hop_num = args.hop_num
-    k = args.k
+    p = args.p
 
-    output_dir = f'./qv_res/reranked_{dataset}_{k}shot_{q_rtr}_{hop_num}hop.csv'
+    output_dir = f'./qv_res/reranked_{dataset}_{p}shot_{q_rtr}_{hop_num}hop.csv'
     if Path(output_dir).exists():
         print("File exists", output_dir)
         raise RuntimeError("don't need to continue")
@@ -63,8 +63,8 @@ if __name__=="__main__":
     
     # >> dataset_obj.text_loader(["text"])
 
-    print("Reading QVs", f'./gen_qv_res/{dataset}_{k}shot_{hop_num}hop_{q_rtr}_qvs.json')
-    with open(f'./gen_qv_res/{dataset}_{k}shot_{hop_num}hop_{q_rtr}_qvs.json') as f:
+    print("Reading QVs", f'./gen_qv_res/{dataset}_{p}shot_{hop_num}hop_{q_rtr}_qvs.json')
+    with open(f'./gen_qv_res/{dataset}_{p}shot_{hop_num}hop_{q_rtr}_qvs.json') as f:
         unranked_qvs = json.load(f)
 
     print("converting to csv")

@@ -23,10 +23,11 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_name", type=str, default='dl_19', choices=['dl_19', 'dl_20', 'dl_21', 'dl_22', 'webis-touche2020', 'trec_covid'])
     parser.add_argument("--retrieval", type=str, default='bm25_monoT5', choices=['bm25', 'bm25_monoT5', 'bm25_rankllama', 'tct', 'tct_monoT5', 'tct_rankllama'])
-    parser.add_argument("--q_retriever", type=str, default='bm25', choices=['bm25', 'sbert'])
-    parser.add_argument("--hop_num", type=int, default=1, choices=[1, 2])
-    parser.add_argument("--k", type=int, default=1)
-    parser.add_argument("--p", type=int, default=-1)
+    parser.add_argument("--q_retriever", type=str, default='bm25', choices=['bm25', 'sbert', 'dragon', 'tct'])
+    parser.add_argument("--hop_num", type=int, default=1, choices=[1, 2]) # 1-hop or 2-hop retrieved QVs are used in the experiment
+    parser.add_argument("--k", type=int, default=1) # the number of QVs leveraged in QPP
+    parser.add_argument("--p", type=int, default=-1) # p=-1 if it only uses retrieved QVs 
+    parser.add_argument("--base_predictor", type=str, default='nqc')
     args = parser.parse_args()
     
     dataset = args.dataset_name
@@ -35,10 +36,11 @@ if __name__=="__main__":
     hop_num = f'{args.hop_num}hop'
     k = args.k
     p = args.p
+    base_predictor = args.base_predictor
 
     print('[debug]', q_rtr)
 
-    output_dir = f'./exp_res/{dataset}_{retrieval}_{hop_num}_{q_rtr}_{k}' if (p==-1) else f'./exp_res/{dataset}_{retrieval}_{p}shot_{hop_num}_{q_rtr}_{k}'
+    output_dir = f'./exp_res/{dataset}_{retrieval}_{base_predictor}_{hop_num}_{q_rtr}_{k}.csv' if (p==-1) else f'./exp_res/{dataset}_{retrieval}_{base_predictor}_{p}shot_{hop_num}_{q_rtr}_{k}.csv'
     if Path(output_dir).exists():
         print("File exists", output_dir)
         raise RuntimeError("don't need to continue")
@@ -89,6 +91,14 @@ if __name__=="__main__":
     # base qpp model
     
     nqc = NQC_QPP(index_path=index_path)
+
+    try:
+        if(base_predictor=='nqc'):
+            base_qpp = nqc
+        elif(base_predictor=='uef'):
+            base_qpp = UEFramework(nqc)
+    except:
+        print("Predictor has not been supported!")
     
     qv_qpp_df_content = []
     
@@ -106,7 +116,7 @@ if __name__=="__main__":
     
     for qid in tqdm(res.qid.unique()):
         # print(qid)
-        estimate = nqc.compute(res=res, qid=qid, topk=50)
+        estimate = base_qpp.compute(res=res, qid=qid, topk=50)
         
     
         qv_df_for_qid = qv_df[qv_df.qid==qid][['rqid', 'rqText', 'rank', 'score']].copy()
@@ -116,7 +126,7 @@ if __name__=="__main__":
     
         temp_dict = {}
         for rqid in qv_df_for_qid.qid:
-            temp_dict.update({rqid: nqc.compute(temp_qv_res, rqid, topk=50)})
+            temp_dict.update({rqid: base_qpp.compute(temp_qv_res, rqid, topk=50)})
     
         qv_df_for_qid['ref_est'] = qv_df_for_qid.qid.apply(lambda x: temp_dict[x])
         
