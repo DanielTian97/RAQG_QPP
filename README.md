@@ -34,6 +34,7 @@ RAQG_QPP/
 ├── retrieve_qvs.py
 ├── generate_qvs.py
 └── rerank_gen_qv.py
+```
 
 ## Example scripts:
 
