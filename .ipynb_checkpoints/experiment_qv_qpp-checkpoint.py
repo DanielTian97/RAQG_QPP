@@ -38,7 +38,7 @@ if __name__=="__main__":
 
     print('[debug]', q_rtr)
 
-    output_dir = f'./additional_res/{dataset}_{retrieval}_{hop_num}_{q_rtr}_{k}' if (p==-1) else f'./additional_res/{dataset}_{retrieval}_{p}shot_{hop_num}_{q_rtr}_{k}'
+    output_dir = f'./exp_res/{dataset}_{retrieval}_{hop_num}_{q_rtr}_{k}' if (p==-1) else f'./exp_res/{dataset}_{retrieval}_{p}shot_{hop_num}_{q_rtr}_{k}'
     if Path(output_dir).exists():
         print("File exists", output_dir)
         raise RuntimeError("don't need to continue")
